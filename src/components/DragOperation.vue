@@ -1,9 +1,11 @@
 <template>
-  <div class="drag__operation-wrapper" id="operation">
+  <div class="drag__wrapper drag__operation-wrapper">
     <button
-        class="drag__operation-btn"
-        v-for="(btn, i) in operation" :key="i">
-      {{ btn }}
+        class="drag__btn drag__operation-btn"
+        v-for="(operator, i) in operations" :key="i"
+        @click="enterOperator(operator)"
+    >
+      {{ operator }}
     </button>
   </div>
 </template>
@@ -13,7 +15,12 @@ export default {
   name: "DragOperation",
   data() {
     return {
-      operation: ['/', 'x', '-', '+']
+      operations: ['/', 'x', '-', '+']
+    }
+  },
+  methods: {
+    enterOperator(operator) {
+      this.$store.commit('enterOperator', operator)
     }
   }
 }
@@ -21,25 +28,7 @@ export default {
 
 <style scoped>
 .drag__operation-wrapper {
-  width: 100%;
   height: 56px;
-  padding: 4px;
-  background: #FFFFFF;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06), 0 4px 6px rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
-  display: flex;
-  gap: 8px;
 }
 
-.drag__operation-btn {
-  flex-grow: 1;
-  background: #FFFFFF;
-  border: 1px solid #E2E3E5;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 500;
-  font-size: 14px;
-  text-align: center;
-  color: #000000;
-}
 </style>

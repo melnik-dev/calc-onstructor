@@ -1,24 +1,32 @@
 <template>
-<div class="drag__input-wrapper" id="input">
-  <input type="text" class="drag__input" placeholder="0" readonly>
+<div class="drag__wrapper drag__input-wrapper">
+  <input v-model="input" type="text" class="drag__input" :class="{'drag__input--longword' : fontSize}" readonly>
+
 </div>
 </template>
 
 <script>
 export default {
-  name: "DragInput"
+  name: "DragInput",
+  computed: {
+    input: {
+      get() {
+        return this.$store.state.isInput ? this.$store.state.inputValue : this.$store.state.currentNumber
+      },
+      set(value) {
+        this.$store.commit('enterNumber', value)
+      }
+    },
+    fontSize() {
+      return this.$store.getters.getSizeWord
+    }
+  }
 }
 </script>
 
 <style scoped>
 .drag__input-wrapper{
-  width: 100%;
   height: 60px;
-  padding: 4px;
-  background: #FFFFFF;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06), 0 4px 6px rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
-  display: flex;
 }
 .drag__input{
   padding: 4px 8px;
@@ -32,5 +40,8 @@ export default {
   font-size: 36px;
   color: #111827;
   cursor: pointer;
+}
+.drag__input--longword {
+  font-size: 19px
 }
 </style>

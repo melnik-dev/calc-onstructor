@@ -1,13 +1,13 @@
 <template>
   <div class="switch-mode__wrapper">
     <div class="switch-mode">
-      <button class="switch-mode__btn">
+      <button :class="['switch-mode__btn', {'switch-mode__btn--active' : isRuntime}]" @click="onRuntime">
         <svg class="btn-icon icon-eye" width="20" height="20">
           <use xlink:href="#eye"></use>
         </svg>
         Runtime
       </button>
-      <button class="switch-mode__btn switch-mode__btn--active">
+      <button :class="['switch-mode__btn', {'switch-mode__btn--active' : !isRuntime}]" @click="onConstructor">
         <svg class="btn-icon selector" width="20" height="20">
           <use xlink:href="#selector"></use>
         </svg>
@@ -19,7 +19,23 @@
 
 <script>
 export default {
-  name: "SwitchMode"
+  name: "SwitchMode",
+  emits: ['onRuntime', 'onConstructor'],
+  data() {
+    return {
+      isRuntime: true
+    }
+  },
+  methods: {
+    onRuntime() {
+      this.isRuntime = true
+      this.$emit('onRuntime')
+    },
+    onConstructor() {
+      this.isRuntime = false
+      this.$emit('onConstructor')
+    }
+  }
 }
 </script>
 

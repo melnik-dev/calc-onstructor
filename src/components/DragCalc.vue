@@ -15,29 +15,31 @@
   </svg>
 
   <div class="container">
-    <SwitchMode/>
+    <SwitchMode @onRuntime="onRuntime" @onConstructor="onConstructor"/>
     <div
-        class="drag__box drag__box-left"
-        @dragstart="dragStart"
-        @dragend="dragEnd"
+        class="drag__box calculator"
     >
-      <DragInput draggable="true"/>
-      <DragOperation draggable="true"/>
-      <DragNumber draggable="true"/>
-      <DragEqually draggable="true"/>
+      <div id="input" class="draggable">
+        <DragInput/>
+      </div>
+      <div id="operation" class="draggable">
+        <DragOperation/>
+      </div>
+      <div id="number" class="draggable">
+        <DragNumber/>
+      </div>
+      <div id="equally" class="draggable">
+        <DragEqually/>
+      </div>
     </div>
     <div
-        class="drag__box drag__box-right"
+        class="drag__box constructor"
         ref="dragzone"
-        @dragenter="dragEnter"
-        @dragleave="dragLeave"
-        @dragover="dragOver"
-        @drop="dragDrop"
     >
-      <div :class="['drag__box-right--back', { 'drag__box-right--back-none' : isZonElm }]">
-        <img class="box-right__pic" src="../assets/pic.png">
-        <span class="box-right__title">Перетащите сюда</span>
-        <span class="box-right__subtitle">любой элемент<br> из левой панели</span>
+      <div :class="['constructor__note', { 'constructor__note--hiden' : isNoteInZone }]">
+        <img class="constructor__pic" src="../assets/pic.png" alt="pic">
+        <span class="constructor__title">Перетащите сюда</span>
+        <span class="constructor__subtitle">любой элемент<br> из левой панели</span>
       </div>
     </div>
   </div>
@@ -61,105 +63,192 @@ export default {
   },
   data() {
     return {
-      isZonElm: false
+      isNoteInZone: false,
+      hasInConstructor: []
     }
   },
   methods: {
-    hasElemZone(id) {
-     return !!this.$refs.dragzone.querySelector(`#${id}`);
+    onRuntime() {
+      this.$store.commit('clear')
+      let dragElement = document.querySelectorAll('.draggable')
+      dragElement.forEach(elm => {
+        elm.draggable = false
+        this.removeEventElement(elm)
+        this.removeConctructorEvent()
+        console.log(elm.id)
+      })
+      console.log(dragElement)
+      console.log('onRuntime')
     },
-    dragStart(evt) {
-      evt.target.style.opacity = '0.5';
+    onConstructor() {
+      this.$store.commit('clear')
+      let dragElement = document.querySelectorAll('.draggable')
+      dragElement.forEach(elm => {
+        if(!this.hasInConstructor.includes(elm.id)) {
+          elm.draggable = true
+          this.addEventElement(elm)
+          this.addConctructorEvent()
+        }
+      })
+      let dragConstructorElement = document.querySelectorAll('.constructor__draggable')
+      if(dragConstructorElement) {this.addEventRemoveElement(dragConstructorElement)}
+      console.log(dragElement)
+      console.log('onConstructor')
+    },
 
-      evt.dataTransfer.dropEffect='copy';
-      evt.dataTransfer.setData("text/plain", evt.target.id);
+    dragStart(evt) {
+      evt.currentTarget.style.opacity = '0.5';
+      evt.dataTransfer.dropEffect = 'copy';
+      evt.dataTransfer.setData("text/plain", evt.currentTarget.id);
       console.log('dragStart')
     },
     dragEnd(evt) {
-      if(!this.hasElemZone(evt.target.id)) {
+      if (!this.hasInConstructor.includes(evt.currentTarget.id)) {
         evt.target.style.opacity = '1';
       }
       console.log('dragEnd')
-      console.log(evt.target.id)
     },
-    dragEnter() {
-      this.$refs.dragzone.style.background = '#F0F9FF';
-      console.log('dragEnter')
+    dragEnterZone() {
+        this.$refs.dragzone.style.background = '#F0F9FF';
+      console.log('dragEnterZone')
     },
-    dragLeave() {
+    dragLeaveZone() {
       this.$refs.dragzone.style.background = 'none';
-      console.log('dragLeave')
+      console.log('dragLeaveZone')
     },
     dragOver(evt) {
       evt.preventDefault()
       console.log('dragOver')
     },
+    // dragOverElement(evt) {
+    //   evt.preventDefault()
+    //   console.log('dragOverElement')
+    // },
+    // dragEnterElement(evt) {
+    //   console.log('dragEnterElement')
+    //   console.log(evt.currentTarget)
+    // },
+    // dragLeaveElement(evt) {
+    //   console.log('dragLeaveElement')
+    //   console.log(evt.currentTarget)
+    // },
     dragDrop(evt) {
       console.log('dragDrop');
+      evt.stopPropagation();
       evt.preventDefault();
       this.$refs.dragzone.style.background = 'none';
       let id = evt.dataTransfer.getData("text");
+
+
+      // if(this.hasInConstructor.includes(id)) {
+      //   let dragElm = this.$refs.dragzone.splice(0, 1);
+      //   this.$refs.dragzone.splice(2, 0, dragElm);
+      //   console.log(this.$refs.dragzone.childNodes)
+      //
+      //
+      // } else {
+
+        let clone = this.clonedElement(id);
+        if (id === 'input') {
+          this.$refs.dragzone.prepend(clone);
+          this.hasInConstructor.push(id);
+        } else if (clone){
+          this.$refs.dragzone.appendChild(clone);
+          this.hasInConstructor.push(id);
+        }
+      // }
+
+      console.log(this.hasInConstructor);
+      this.isNoteInZone = true;
+      evt.dataTransfer.clearData();
+    },
+    clonedElement(id) {
+      if(!id) {return }
       let elm = document.getElementById(id);
-      elm.style.opacity = '0.5';
-      elm.draggable = false;
 
       let cloned = elm.cloneNode(true);
       cloned.style.opacity = '1';
-      cloned.addEventListener('dblclick',  this.delElm);
+      cloned.classList.add('constructor__draggable')
+      cloned.addEventListener('dblclick', this.removeElement);
 
-      this.$refs.dragzone.appendChild(cloned);
-      this.isZonElm = true;
-      evt.dataTransfer.clearData();
-
-      this.disabledElm(elm);
-
+      this.disabledElement(elm);
+      return cloned;
     },
-    delElm(evt) {
-      console.log(evt.currentTarget)
-
+    removeElement(evt) {
       let id = evt.currentTarget.id;
-      let elm = document.querySelector(`#${id}`)
+      let elm = document.getElementById(id)
+      this.enableElement(elm)
+      evt.currentTarget.remove();
+      let indexElementInConstructor = this.hasInConstructor.indexOf(id)
+      this.hasInConstructor.splice(indexElementInConstructor, 1)
+
+      if (this.$refs.dragzone.childNodes.length <= 1) {
+        this.isNoteInZone = false;
+      }
+    },
+    disabledElement(elm) {
+      elm.style.opacity = '0.5';
+      elm.draggable = false;
+    },
+    enableElement(elm) {
       elm.style.opacity = '1';
       elm.draggable = true;
-      console.log(elm)
-      this.enaebleElm(elm)
-      evt.currentTarget.remove();
-
-
-
-      // if(hasChild) {
-      //   this.isZonElm = false;
-      // }
-
     },
-    disabledElm(elm) {
-      let allBtn = elm.querySelectorAll("button");
-      let input = elm.querySelector("input");
-      if(allBtn) {
-        allBtn.forEach(btn => {
-          btn.disabled = true
-          btn.style.cursor = 'not-allowed'
-        })
-      }
-      if(input) {
-        input.disabled = true
-        input.style.cursor = 'not-allowed'
-      }
+    addEventElement(elm) {
+      elm.addEventListener('dragstart', this.dragStart)
+      elm.addEventListener('dragend', this.dragEnd)
+
+      // elm.addEventListener('dragenter', this.dragEnterElement)
+      // elm.addEventListener('dragleave', this.dragLeaveElement)
+      // elm.addEventListener('dragover', this.dragOverElement)
     },
-    enaebleElm(elm) {
-      let allBtn = elm.querySelectorAll("button");
-      let input = elm.querySelector("input");
-      if(allBtn) {
-        allBtn.forEach(btn => {
-          btn.disabled = false
-          btn.style.cursor = 'pointer'
-        })
-      }
-      if(input) {
-        input.disabled = false
-        input.style.cursor = 'pointer'
-      }
-    }
+    removeEventElement(elm) {
+      elm.removeEventListener('dragstart', this.dragStart)
+      elm.removeEventListener('dragend', this.dragEnd)
+      elm.removeEventListener('dblclick', this.removeElement);
+      // elm.removeEventListener('dragenter', this.dragEnterElement)
+      // elm.removeEventListener('dragleave', this.dragLeaveElement)
+      // elm.removeEventListener('dragover', this.dragOverElement)
+    },
+    addEventRemoveElement(collection) {
+      collection.forEach(elm => {
+        elm.addEventListener('dblclick', this.removeElement);
+      })
+    },
+    addConctructorEvent() {
+      let conctructor = document.querySelector('.constructor')
+      conctructor.addEventListener('dragenter', this.dragEnterZone)
+      conctructor.addEventListener('dragleave', this.dragLeaveZone)
+      conctructor.addEventListener('dragover', this.dragOver)
+      conctructor.addEventListener('drop', this.dragDrop)
+    },
+    removeConctructorEvent() {
+      let conctructor = document.querySelector('.constructor')
+      conctructor.removeEventListener('dragenter', this.dragEnterZone)
+      conctructor.removeEventListener('dragleave', this.dragLeaveZone)
+      conctructor.removeEventListener('dragover', this.dragOver)
+      conctructor.removeEventListener('drop', this.dragDrop)
+    },
+
+    enterNumber(evt) {
+      this.$store.commit('enterNumber', evt.target.textContent)
+    },
+    enterOperator(evt) {
+      this.$store.commit('enterOperator', evt.target.textContent)
+    },
+    calculate(evt) {
+      this.$store.commit('calculate', evt.target.textContent)
+    },
+
+    // createInputComponent() {
+    //   console.log(this.$refs.dragzone.childNodes)
+    //   const ClonedComponent = createApp(DragInput).use(store).mount(this.$refs.dragzone)
+    //   ClonedComponent.$el.addEventListener('dblclick', this.delElm);
+    //   this.$refs.dragzone.prepend(ClonedComponent.$el);
+    // },
+  },
+  mounted() {
+    this.onRuntime()
   }
 }
 </script>
@@ -185,12 +274,12 @@ export default {
   gap: 12px;
 }
 
-.drag__box-right {
+.constructor {
   position: relative;
   border: 2px dashed #C4C4C4;
 }
 
-.drag__box-right--back {
+.constructor__note {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -200,21 +289,23 @@ export default {
   left: 50%;
   transform: translate(-50%, -50%);
 }
-.drag__box-right--back-none{
+
+.constructor__note--hiden {
   display: none;
 }
-.box-right__pic {
+
+.constructor__pic {
   width: 11px;
 }
 
-.box-right__title {
+.constructor__title {
   font-weight: 500;
   font-size: 14px;
   color: #5D5FEF;
   white-space: nowrap;
 }
 
-.box-right__subtitle {
+.constructor__subtitle {
   font-weight: 400;
   font-size: 12px;
   text-align: center;
