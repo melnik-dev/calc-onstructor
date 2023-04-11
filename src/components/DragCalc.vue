@@ -16,30 +16,28 @@
 
   <div class="container">
     <SwitchMode @onRuntime="onRuntime" @onConstructor="onConstructor"/>
-    <div
-        class="drag__box calculator"
-    >
-      <div id="input" class="draggable">
-        <DragInput/>
-      </div>
-      <div id="operation" class="draggable">
-        <DragOperation/>
-      </div>
-      <div id="number" class="draggable">
-        <DragNumber/>
-      </div>
-      <div id="equally" class="draggable">
-        <DragEqually/>
+    <div class="drag__box calculator">
+      <div v-for="(item, i) in calcElement"
+           :key="i" :id="item" ref="calculatorDraggableElm">
+        <ConstructorType :type="item"/>
       </div>
     </div>
-    <div
-        class="drag__box constructor"
-        ref="dragzone"
-    >
-      <div :class="['constructor__note', { 'constructor__note--hiden' : isNoteInZone }]">
+
+    <div class="drag__box constructor"
+         ref="dragzone"
+         @dragenter="dragEnterZone"
+         @dragleave="dragLeaveZone"
+         @dragover="dragOver"
+         @drop="dragDrop">
+      <div :class="['constructor__note', { 'constructor__note--hiden' : constructorElement.length }]">
         <img class="constructor__pic" src="../assets/pic.png" alt="pic">
         <span class="constructor__title">Перетащите сюда</span>
         <span class="constructor__subtitle">любой элемент<br> из левой панели</span>
+      </div>
+      <div v-for="(item, i) in constructorElement"
+           :key="i" :id="item"
+           ref="constructorDraggableElm">
+        <ConstructorType :type="item"/>
       </div>
     </div>
   </div>
@@ -47,65 +45,62 @@
 
 <script>
 import SwitchMode from "@/components/SwitchMode";
-import DragInput from "@/components/DragInput";
-import DragOperation from "@/components/DragOperation";
-import DragNumber from "@/components/DragNumber";
-import DragEqually from "@/components/DragEqually";
+import ConstructorType from "@/components/ConstructorType";
+import { nextTick } from 'vue'
 
 export default {
   name: "dragCalc",
   components: {
     SwitchMode,
-    DragInput,
-    DragOperation,
-    DragNumber,
-    DragEqually
+    ConstructorType
   },
   data() {
     return {
       isNoteInZone: false,
-      hasInConstructor: []
+      calcElement: ['input', 'operation', 'number', 'equally'],
+      constructorElement: [],
     }
   },
   methods: {
     onRuntime() {
       this.$store.commit('clear')
-      let dragElement = document.querySelectorAll('.draggable')
-      dragElement.forEach(elm => {
+
+      this.$refs.calculatorDraggableElm.forEach(elm => {
         elm.draggable = false
         this.removeEventElement(elm)
-        this.removeConctructorEvent()
-        console.log(elm.id)
       })
-      console.log(dragElement)
+
+      if (this.$refs.constructorDraggableElm) {
+        this.$refs.constructorDraggableElm.forEach(elm => {
+          elm.draggable = true
+          elm.removeEventListener('dblclick', this.removeElement);
+        })
+      }
       console.log('onRuntime')
     },
     onConstructor() {
       this.$store.commit('clear')
-      let dragElement = document.querySelectorAll('.draggable')
-      dragElement.forEach(elm => {
-        if(!this.hasInConstructor.includes(elm.id)) {
+      this.$refs.calculatorDraggableElm.forEach(elm => {
           elm.draggable = true
           this.addEventElement(elm)
-          this.addConctructorEvent()
-        }
       })
-      let dragConstructorElement = document.querySelectorAll('.constructor__draggable')
-      if(dragConstructorElement) {this.addEventRemoveElement(dragConstructorElement)}
-      console.log(dragElement)
+      if (this.$refs.constructorDraggableElm) {
+        this.$refs.constructorDraggableElm.forEach(elm => {
+          elm.draggable = true
+          elm.addEventListener('dblclick', this.removeElement);
+        })
+      }
       console.log('onConstructor')
     },
 
     dragStart(evt) {
       evt.currentTarget.style.opacity = '0.5';
-      evt.dataTransfer.dropEffect = 'copy';
+      evt.dataTransfer.dropEffect = 'move';
       evt.dataTransfer.setData("text/plain", evt.currentTarget.id);
       console.log('dragStart')
     },
     dragEnd(evt) {
-      if (!this.hasInConstructor.includes(evt.currentTarget.id)) {
         evt.target.style.opacity = '1';
-      }
       console.log('dragEnd')
     },
     dragEnterZone() {
@@ -120,132 +115,51 @@ export default {
       evt.preventDefault()
       console.log('dragOver')
     },
-    // dragOverElement(evt) {
-    //   evt.preventDefault()
-    //   console.log('dragOverElement')
-    // },
-    // dragEnterElement(evt) {
-    //   console.log('dragEnterElement')
-    //   console.log(evt.currentTarget)
-    // },
-    // dragLeaveElement(evt) {
-    //   console.log('dragLeaveElement')
-    //   console.log(evt.currentTarget)
-    // },
-    dragDrop(evt) {
+
+    async dragDrop(evt) {
       console.log('dragDrop');
       evt.stopPropagation();
       evt.preventDefault();
       this.$refs.dragzone.style.background = 'none';
       let id = evt.dataTransfer.getData("text");
 
-
-      // if(this.hasInConstructor.includes(id)) {
-      //   let dragElm = this.$refs.dragzone.splice(0, 1);
-      //   this.$refs.dragzone.splice(2, 0, dragElm);
-      //   console.log(this.$refs.dragzone.childNodes)
-      //
-      //
-      // } else {
-
-        let clone = this.clonedElement(id);
         if (id === 'input') {
-          this.$refs.dragzone.prepend(clone);
-          this.hasInConstructor.push(id);
-        } else if (clone){
-          this.$refs.dragzone.appendChild(clone);
-          this.hasInConstructor.push(id);
+          this.constructorElement.unshift(id);
+        } else {
+          this.constructorElement.push(id);
         }
-      // }
 
-      console.log(this.hasInConstructor);
-      this.isNoteInZone = true;
+
+      let indexElementInCalcElement = this.calcElement.indexOf(id)
+
+        this.$refs.calculatorDraggableElm[indexElementInCalcElement].style.visibility = 'hidden';
+
+
+      let indexElementInConstructor = this.constructorElement.indexOf(id)
+
+      await nextTick()
+      this.$refs.constructorDraggableElm[indexElementInConstructor].addEventListener('dblclick', this.removeElement)
+
+
       evt.dataTransfer.clearData();
-    },
-    clonedElement(id) {
-      if(!id) {return }
-      let elm = document.getElementById(id);
-
-      let cloned = elm.cloneNode(true);
-      cloned.style.opacity = '1';
-      cloned.classList.add('constructor__draggable')
-      cloned.addEventListener('dblclick', this.removeElement);
-
-      this.disabledElement(elm);
-      return cloned;
     },
     removeElement(evt) {
       let id = evt.currentTarget.id;
-      let elm = document.getElementById(id)
-      this.enableElement(elm)
-      evt.currentTarget.remove();
-      let indexElementInConstructor = this.hasInConstructor.indexOf(id)
-      this.hasInConstructor.splice(indexElementInConstructor, 1)
 
-      if (this.$refs.dragzone.childNodes.length <= 1) {
-        this.isNoteInZone = false;
-      }
-    },
-    disabledElement(elm) {
-      elm.style.opacity = '0.5';
-      elm.draggable = false;
-    },
-    enableElement(elm) {
-      elm.style.opacity = '1';
-      elm.draggable = true;
+      let indexElementInConstructor = this.constructorElement.indexOf(id)
+      this.constructorElement.splice(indexElementInConstructor, 1)
+
+      let indexElementInCalcElement = this.calcElement.indexOf(id)
+      this.$refs.calculatorDraggableElm[indexElementInCalcElement].style.visibility = 'visible';
     },
     addEventElement(elm) {
       elm.addEventListener('dragstart', this.dragStart)
       elm.addEventListener('dragend', this.dragEnd)
-
-      // elm.addEventListener('dragenter', this.dragEnterElement)
-      // elm.addEventListener('dragleave', this.dragLeaveElement)
-      // elm.addEventListener('dragover', this.dragOverElement)
     },
     removeEventElement(elm) {
       elm.removeEventListener('dragstart', this.dragStart)
       elm.removeEventListener('dragend', this.dragEnd)
-      elm.removeEventListener('dblclick', this.removeElement);
-      // elm.removeEventListener('dragenter', this.dragEnterElement)
-      // elm.removeEventListener('dragleave', this.dragLeaveElement)
-      // elm.removeEventListener('dragover', this.dragOverElement)
     },
-    addEventRemoveElement(collection) {
-      collection.forEach(elm => {
-        elm.addEventListener('dblclick', this.removeElement);
-      })
-    },
-    addConctructorEvent() {
-      let conctructor = document.querySelector('.constructor')
-      conctructor.addEventListener('dragenter', this.dragEnterZone)
-      conctructor.addEventListener('dragleave', this.dragLeaveZone)
-      conctructor.addEventListener('dragover', this.dragOver)
-      conctructor.addEventListener('drop', this.dragDrop)
-    },
-    removeConctructorEvent() {
-      let conctructor = document.querySelector('.constructor')
-      conctructor.removeEventListener('dragenter', this.dragEnterZone)
-      conctructor.removeEventListener('dragleave', this.dragLeaveZone)
-      conctructor.removeEventListener('dragover', this.dragOver)
-      conctructor.removeEventListener('drop', this.dragDrop)
-    },
-
-    enterNumber(evt) {
-      this.$store.commit('enterNumber', evt.target.textContent)
-    },
-    enterOperator(evt) {
-      this.$store.commit('enterOperator', evt.target.textContent)
-    },
-    calculate(evt) {
-      this.$store.commit('calculate', evt.target.textContent)
-    },
-
-    // createInputComponent() {
-    //   console.log(this.$refs.dragzone.childNodes)
-    //   const ClonedComponent = createApp(DragInput).use(store).mount(this.$refs.dragzone)
-    //   ClonedComponent.$el.addEventListener('dblclick', this.delElm);
-    //   this.$refs.dragzone.prepend(ClonedComponent.$el);
-    // },
   },
   mounted() {
     this.onRuntime()
