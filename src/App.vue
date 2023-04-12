@@ -27,6 +27,7 @@ export default {
   border-radius: 4px;
   display: flex;
   gap: 8px;
+  /*pointer-events: none;*/
 }
 
 .drag__btn {
