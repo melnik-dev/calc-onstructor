@@ -1,5 +1,5 @@
 <template>
-  <div class="drag__wrapper drag__equally-wrapper">
+  <div class="drag__wrapper drag__equally-wrapper" :class="{'pointer-events' : isConstructor}">
     <button @click="calculate" class="drag__btn drag__equally-btn">=</button>
   </div>
 </template>
@@ -7,6 +7,7 @@
 <script>
 export default {
   name: "DragEqually",
+  props: ['isConstructor'],
   methods: {
     calculate() {
       this.$store.commit('calculate', '=')

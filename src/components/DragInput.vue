@@ -1,5 +1,5 @@
 <template>
-<div class="drag__wrapper drag__input-wrapper">
+<div class="drag__wrapper drag__input-wrapper" :class="{'pointer-events' : isConstructor}">
   <input v-model="input" type="text" class="drag__input" :class="{'drag__input--longword' : fontSize}" readonly>
 
 </div>
@@ -8,6 +8,7 @@
 <script>
 export default {
   name: "DragInput",
+  props: ['isConstructor'],
   computed: {
     input: {
       get() {

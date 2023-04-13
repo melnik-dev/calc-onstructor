@@ -43,7 +43,6 @@ const store = createStore({
         },
         enterOperator(state, value) {
             state.isInput = false
-            console.log(state.operator)
             if (state.operator === '+') {
                 store.commit('onPlus')
             } else if (state.operator === '-') {

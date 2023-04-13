@@ -20,7 +20,7 @@
       <div v-for="(item, i) in arrayCalcElement"
            :key="i" :id="item"
            ref="calculatorDraggableElm">
-        <ConstructorType :type="item"/>
+        <ConstructorType :type="item" :isConstructor="isConstructor"/>
       </div>
     </div>
 
@@ -40,7 +40,7 @@
            :id="item"
            class="constructor-elm"
            ref="constructorDraggableElm">
-        <ConstructorType :type="item"/>
+        <ConstructorType :type="item" :isConstructor="isConstructor"/>
       </div>
     </div>
   </div>
@@ -61,12 +61,13 @@ export default {
     return {
       arrayCalcElement: ['input', 'operation', 'number', 'equally'],
       arrayConstructorElement: [],
-      indexElemAfterPaste: 0
+      indexElemAfterPaste: 0,
+      isConstructor: false
     }
   },
   methods: {
     onRuntime() {
-      console.log('onRuntime')
+      this.isConstructor = false
       this.$store.commit('clear')
 
       this.$refs.calculatorDraggableElm.forEach(elm => {
@@ -80,7 +81,7 @@ export default {
       }
     },
     onConstructor() {
-      console.log('onConstructor')
+      this.isConstructor = true
       this.$store.commit('clear')
 
       this.$refs.calculatorDraggableElm.forEach(elm => {
@@ -94,18 +95,18 @@ export default {
     },
 
     dragStart(evt) {
-      evt.currentTarget.style.opacity = '0.5';
-      evt.dataTransfer.dropEffect = 'move';
+      evt.currentTarget.style.opacity = '0.5'
+      evt.dataTransfer.dropEffect = 'move'
       evt.dataTransfer.setData("text/plain", evt.currentTarget.id);
     },
     dragEnd(evt) {
-      evt.target.style.opacity = '1';
+      evt.target.style.opacity = '1'
     },
     dragEnterZone() {
-      this.$refs.dragzone.style.background = '#F0F9FF';
+      this.$refs.dragzone.style.background = '#F0F9FF'
     },
     dragLeaveZone() {
-      this.$refs.dragzone.style.background = 'none';
+      this.$refs.dragzone.style.background = 'none'
     },
     dragOver(evt) {
       evt.preventDefault()
@@ -114,40 +115,36 @@ export default {
     dragEnter(evt) {
       evt.currentTarget.classList.add('line')
       this.indexElemAfterPaste = this.getIndexElmInConstructor(evt.currentTarget.id)
-      console.log('dragEnter C', this.indexElemAfterPaste)
     },
     dragLeave(evt) {
       evt.currentTarget.classList.remove('line')
     },
 
     async dragDrop(evt) {
-      console.log('dragDrop');
-      evt.stopPropagation();
-      evt.preventDefault();
-      this.$refs.dragzone.style.background = 'none';
-      let id = evt.dataTransfer.getData("text");
+      evt.stopPropagation()
+      evt.preventDefault()
+      this.$refs.dragzone.style.background = 'none'
+      let id = evt.dataTransfer.getData("text")
 
+      if (id === 'input') {
+        if (this.getIndexElmInConstructor(id) === -1) {
+          this.arrayConstructorElement.unshift(id)
+        }
+      } else {
 
-        if (id === 'input') {
-          if(this.getIndexElmInConstructor(id) === -1) {
-            this.arrayConstructorElement.unshift(id);
-          }
-        } else {
-
-          let indexElemInConstructor = this.getIndexElmInConstructor(id)
-          if(indexElemInConstructor !== -1) {
-            this.arrayConstructorElement.splice(indexElemInConstructor, 1)
-          }
-
-        console.log('indexElemInConstructor', indexElemInConstructor)
-        console.log('indexElemAfterPaste', this.indexElemAfterPaste)
+        let indexElemInConstructor = this.getIndexElmInConstructor(id)
+        if (indexElemInConstructor !== -1) {
+          this.arrayConstructorElement.splice(indexElemInConstructor, 1)
+        }
 
         this.arrayConstructorElement.splice(this.indexElemAfterPaste + 1, 0, id)
       }
-        await nextTick()
+      await nextTick()
       this.$refs.constructorDraggableElm.forEach(elm => {
-        console.log(elm.id)
-        if(elm.id === id) {
+        if (elm.classList.contains('line')) {
+          elm.classList.remove('line')
+        }
+        if (elm.id === id) {
           this.addEventConstructorElement(elm)
         }
       })
@@ -156,20 +153,20 @@ export default {
 
       if (!(this.getIndexElmInConstructor(id) === -1)) {
         this.$refs.calculatorDraggableElm[this.getIndexElmInCalc(id)]
-            .style.visibility = 'hidden';
+            .style.visibility = 'hidden'
       }
 
-      evt.dataTransfer.clearData();
+      evt.dataTransfer.clearData()
     },
     removeElement(evt) {
       evt.stopPropagation()
-      let id = evt.currentTarget.id;
+      let id = evt.currentTarget.id
 
       let indexElemInConstructor = this.getIndexElmInConstructor(id)
       this.arrayConstructorElement.splice(indexElemInConstructor, 1)
 
       this.$refs.calculatorDraggableElm[this.getIndexElmInCalc(id)]
-          .style.visibility = 'visible';
+          .style.visibility = 'visible'
     },
     getIndexElmInConstructor(id) {
       return this.arrayConstructorElement.indexOf(id)
@@ -191,15 +188,15 @@ export default {
 
     addEventConstructorElement(elm) {
       this.addEventElement(elm)
-      elm.addEventListener('dblclick', this.removeElement);
-      elm.addEventListener('dragenter', this.dragEnter);
-      elm.addEventListener('dragleave', this.dragLeave);
+      elm.addEventListener('dblclick', this.removeElement)
+      elm.addEventListener('dragenter', this.dragEnter)
+      elm.addEventListener('dragleave', this.dragLeave)
     },
     removeEventConstructorElement(elm) {
       this.removeEventElement(elm)
-      elm.removeEventListener('dblclick', this.removeElement);
-      elm.removeEventListener('dragenter', this.dragEnter);
-      elm.removeEventListener('dragleave', this.dragLeave);
+      elm.removeEventListener('dblclick', this.removeElement)
+      elm.removeEventListener('dragenter', this.dragEnter)
+      elm.removeEventListener('dragleave', this.dragLeave)
     },
   },
   mounted() {
@@ -266,9 +263,11 @@ export default {
   text-align: center;
   color: #6B7280;
 }
+
 .constructor-elm {
   position: relative;
 }
+
 .line::after {
   content: '';
   position: absolute;

@@ -27,7 +27,6 @@ export default {
   border-radius: 4px;
   display: flex;
   gap: 8px;
-  /*pointer-events: none;*/
 }
 
 .drag__btn {
@@ -43,5 +42,8 @@ export default {
 }
 .drag__btn:hover {
   border-color: #5D5FEF;
+}
+.pointer-events {
+  pointer-events: none;
 }
 </style>

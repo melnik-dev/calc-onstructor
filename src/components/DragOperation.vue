@@ -1,5 +1,5 @@
 <template>
-  <div class="drag__wrapper drag__operation-wrapper">
+  <div class="drag__wrapper drag__operation-wrapper" :class="{'pointer-events' : isConstructor}">
     <button
         class="drag__btn drag__operation-btn"
         v-for="(operator, i) in operations" :key="i"
@@ -13,6 +13,7 @@
 <script>
 export default {
   name: "DragOperation",
+  props: ['isConstructor'],
   data() {
     return {
       operations: ['/', 'x', '-', '+']

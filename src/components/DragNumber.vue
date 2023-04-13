@@ -1,5 +1,5 @@
 <template>
-<div class="drag__wrapper drag__numbers-wrapper">
+<div class="drag__wrapper drag__numbers-wrapper" :class="{'pointer-events' : isConstructor}">
   <button
       @click="enterNumber(value)"
       class="drag__btn drag__numbers-btn"
@@ -12,6 +12,7 @@
 <script>
 export default {
   name: "DragNumber",
+  props: ['isConstructor'],
   data() {
     return {
       values: ['7','8','9','4','5','6','1','2','3','0','C',',']

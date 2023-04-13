@@ -1,8 +1,8 @@
 <template>
-  <DragInput v-if="type === 'input'"/>
-  <DragOperation v-if="type === 'operation'"/>
-  <DragNumber v-if="type === 'number'"/>
-  <DragEqually v-if="type === 'equally'"/>
+  <DragInput v-if="type === 'input'" :isConstructor="isConstructor"/>
+  <DragOperation v-if="type === 'operation'" :isConstructor="isConstructor"/>
+  <DragNumber v-if="type === 'number'" :isConstructor="isConstructor"/>
+  <DragEqually v-if="type === 'equally'" :isConstructor="isConstructor"/>
 </template>
 
 <script>
@@ -19,7 +19,7 @@ export default {
     DragNumber,
     DragEqually
   },
-  props: ['type'],
+  props: ['type', 'isConstructor'],
 }
 </script>
 
