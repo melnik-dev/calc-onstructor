@@ -1,6 +1,7 @@
 
 ## Kонструктор калькулятора
 ![](/src/assets/constructor.png)
+
 [Demo](https://calc-onstructor.vercel.app/).
 [Figma](https://www.figma.com/file/pdYzuOkvXY3Q00YRAMsLuz/Calculator-Constructor).
 
